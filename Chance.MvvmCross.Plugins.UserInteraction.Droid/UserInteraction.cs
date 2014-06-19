@@ -10,13 +10,15 @@ namespace Chance.MvvmCross.Plugins.UserInteraction.Droid
 {
     public class UserInteraction : IUserInteraction
     {
-        protected Activity CurrentActivity {
+        protected Activity CurrentActivity
+        {
             get { return Mvx.Resolve<IMvxAndroidCurrentTopActivity>().Activity; }
         }
 
         public void Confirm(string message, Action okClicked, string title = null, string okButton = "OK", string cancelButton = "Cancel")
         {
-            Confirm(message, confirmed => {
+            Confirm(message, confirmed =>
+            {
                 if (confirmed)
                     okClicked();
             },
@@ -26,19 +28,22 @@ namespace Chance.MvvmCross.Plugins.UserInteraction.Droid
         public void Confirm(string message, Action<bool> answer, string title = null, string okButton = "OK", string cancelButton = "Cancel")
         {
             //Mvx.Resolve<IMvxMainThreadDispatcher>().RequestMainThreadAction();
-            Application.SynchronizationContext.Post(ignored => {
+            Application.SynchronizationContext.Post(ignored =>
+            {
                 if (CurrentActivity == null) return;
-                this.CustomizeAndShow(new AlertDialog.Builder(CurrentActivity)
+                this.CustomizeAndShow(new AlertDialog.Builder(this.CurrentActivity)
                     .SetMessage(message)
                         .SetTitle(title)
-                        .SetPositiveButton(okButton, delegate {
-                            if (answer != null)
-                                answer(true);
-                        })
-                        .SetNegativeButton(cancelButton, delegate {	
-                            if (answer != null)
-                                answer(false);
-                        }));
+                        .SetPositiveButton(okButton, delegate
+                {
+                    if (answer != null)
+                        answer(true);
+                })
+                        .SetNegativeButton(cancelButton, delegate
+                {
+                    if (answer != null)
+                        answer(false);
+                }));
             }, null);
         }
 
@@ -55,21 +60,24 @@ namespace Chance.MvvmCross.Plugins.UserInteraction.Droid
             Application.SynchronizationContext.Post(ignored =>
             {
                 if (CurrentActivity == null) return;
-                this.CustomizeAndShow(new AlertDialog.Builder(CurrentActivity)
+                this.CustomizeAndShow(new AlertDialog.Builder(this.CurrentActivity)
                     .SetMessage(message)
                         .SetTitle(title)
-                        .SetPositiveButton(positive, delegate {
-                            if (answer != null)
-                                answer(ConfirmThreeButtonsResponse.Positive);
-                        })
-                        .SetNegativeButton(negative, delegate {
-                            if (answer != null)
-                                answer(ConfirmThreeButtonsResponse.Negative);
-                        })
-                        .SetNeutralButton(neutral, delegate {
-                            if (answer != null)
-                                answer(ConfirmThreeButtonsResponse.Neutral);
-                        }));
+                        .SetPositiveButton(positive, delegate
+                {
+                    if (answer != null)
+                        answer(ConfirmThreeButtonsResponse.Positive);
+                })
+                        .SetNegativeButton(negative, delegate
+                {
+                    if (answer != null)
+                        answer(ConfirmThreeButtonsResponse.Negative);
+                })
+                        .SetNeutralButton(neutral, delegate
+                {
+                    if (answer != null)
+                        answer(ConfirmThreeButtonsResponse.Neutral);
+                }));
             }, null);
         }
 
@@ -83,15 +91,17 @@ namespace Chance.MvvmCross.Plugins.UserInteraction.Droid
 
         public void Alert(string message, Action done = null, string title = "", string okButton = "OK")
         {
-            Application.SynchronizationContext.Post(ignored => {
+            Application.SynchronizationContext.Post(ignored =>
+            {
                 if (CurrentActivity == null) return;
-                this.CustomizeAndShow(new AlertDialog.Builder(CurrentActivity)
+                this.CustomizeAndShow(new AlertDialog.Builder(this.CurrentActivity)
                     .SetMessage(message)
                         .SetTitle(title)
-                        .SetPositiveButton(okButton, delegate {
-                            if (done != null)
-                                done();
-                        }));
+                        .SetPositiveButton(okButton, delegate
+                {
+                    if (done != null)
+                        done();
+                }));
             }, null);
         }
 
@@ -104,7 +114,8 @@ namespace Chance.MvvmCross.Plugins.UserInteraction.Droid
 
         public void Input(string message, Action<string> okClicked, string placeholder = null, string title = null, string okButton = "OK", string cancelButton = "Cancel", string initialText = null)
         {
-            Input(message, (ok, text) => {
+            Input(message, (ok, text) =>
+            {
                 if (ok)
                     okClicked(text);
             },
@@ -113,39 +124,49 @@ namespace Chance.MvvmCross.Plugins.UserInteraction.Droid
 
         public void Input(string message, Action<bool, string> answer, string hint = null, string title = null, string okButton = "OK", string cancelButton = "Cancel", string initialText = null)
         {
-            Application.SynchronizationContext.Post(ignored => {
+            Application.SynchronizationContext.Post(ignored =>
+            {
                 if (CurrentActivity == null) return;
                 var input = new EditText(CurrentActivity) { Hint = hint, Text = initialText };
 
-                this.CustomizeAndShow(new AlertDialog.Builder(CurrentActivity)
+                this.CustomizeAndShow(new AlertDialog.Builder(this.CurrentActivity)
                     .SetMessage(message)
                         .SetTitle(title)
                         .SetView(input)
-                        .SetPositiveButton(okButton, delegate {
-                            if (answer != null)
-                                answer(true, input.Text);
-                        })
-                        .SetNegativeButton(cancelButton, delegate {	
-                            if (answer != null)
-                                answer(false, input.Text);
-                        }));
+                        .SetPositiveButton(okButton, delegate
+                {
+                    if (answer != null)
+                        answer(true, input.Text);
+                })
+                        .SetNegativeButton(cancelButton, delegate
+                {
+                    if (answer != null)
+                        answer(false, input.Text);
+                }));
             }, null);
         }
 
         public Task<InputResponse> InputAsync(string message, string placeholder = null, string title = null, string okButton = "OK", string cancelButton = "Cancel", string initialText = null)
         {
             var tcs = new TaskCompletionSource<InputResponse>();
-            Input(message, (ok, text) => tcs.SetResult(new InputResponse {Ok = ok, Text = text}),	placeholder, title, okButton, cancelButton, initialText);
+            Input(message, (ok, text) => tcs.SetResult(new InputResponse { Ok = ok, Text = text }), placeholder, title, okButton, cancelButton, initialText);
             return tcs.Task;
         }
 
         private void CustomizeAndShow(AlertDialog.Builder dialogBuilder)
         {
             IAlertDialogBuilderCustomizer customizer;
+            AlertDialog dialog;
             if (Mvx.TryResolve(out customizer))
-                customizer.Customize(dialogBuilder);
+            {
+                dialog = customizer.CustomizeAndCreate(dialogBuilder, this.CurrentActivity);
+            }
+            else
+            {
+                dialog = dialogBuilder.Create();
+            }
 
-            dialogBuilder.Show();
+            dialog.Show();
         }
     }
 }

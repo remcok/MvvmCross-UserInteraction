@@ -4,6 +4,6 @@ namespace Chance.MvvmCross.Plugins.UserInteraction.Droid
 {
     public interface IAlertDialogBuilderCustomizer
     {
-        void Customize(AlertDialog.Builder dialogBuilder);
+        AlertDialog CustomizeAndCreate(AlertDialog.Builder dialogBuilder, Activity currentActivity);
     }
 }
